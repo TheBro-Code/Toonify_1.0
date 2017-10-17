@@ -29,40 +29,63 @@
             android:id="@+id/ivImage"
             android:layout_width="match_parent"
             android:layout_height="350sp"
-            android:layout_alignParentBottom="true"
-            android:src="@drawable/ic_launcher" />
+            android:src="@drawable/ic_launcher"
+            android:layout_below="@+id/cartoonify"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:id="@+id/test"
+            android:layout_alignBaseline="@+id/cartoonify"
+            android:layout_alignBottom="@+id/cartoonify"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:id="@+id/linearLayout">
 
-            <Button
-                android:id="@+id/cartoonify"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:layout_alignParentLeft="true"
-                android:layout_alignParentStart="true"
-                android:text="Cartoonify" />
-
-            <Button
-                android:id="@+id/pencilSketch"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:layout_toEndOf="@+id/cartoonify"
-                android:text="pencil Sketch" />
-
-            <Button
-                android:id="@+id/filter"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:layout_alignParentEnd="true"
-                android:layout_alignParentRight="true"
-                android:text="filter" />
         </LinearLayout>
+
+        <Button
+            android:id="@+id/cartoonify"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Cartoonify"
+            android:layout_below="@+id/linearLayout"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true" />
+
+        <Button
+            android:id="@+id/filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="filter"
+            android:layout_below="@+id/linearLayout"
+            android:layout_toRightOf="@+id/pencilSketch"
+            android:layout_toEndOf="@+id/pencilSketch" />
+
+        <Button
+            android:id="@+id/pencilSketch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="pencil Sketch"
+            android:layout_alignParentTop="true"
+            android:layout_toRightOf="@+id/cartoonify"
+            android:layout_toEndOf="@+id/cartoonify" />
+
+        <Button
+            android:id="@+id/opacity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="opacity"
+            android:layout_alignParentBottom="true"
+            android:layout_toRightOf="@+id/cartoonify"
+            android:layout_toEndOf="@+id/cartoonify"
+            android:layout_marginBottom="132dp" />
 
     </RelativeLayout>
 

@@ -6,8 +6,10 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.IntBuffer;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 import android.app.Activity;
@@ -16,17 +18,23 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.renderscript.ScriptGroup;
+import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
+
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
@@ -35,6 +43,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
+import org.w3c.dom.Text;
 
 import static org.opencv.core.Core.addWeighted;
 import static org.opencv.core.Core.bitwise_not;
@@ -59,7 +68,7 @@ public class MainActivity extends Activity {
     }
 
     private int REQUEST_CAMERA = 0, SELECT_FILE = 1;
-    private Button btnSelect, cartoonify, pencilSketch,filter;
+    private Button btnSelect, cartoonify, pencilSketch,filter,opacity;
     private ImageView ivImage;
     private String userChoosenTask;
 
@@ -97,6 +106,15 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 applyFilter();
+            }
+        });
+
+        opacity = (Button) findViewById(R.id.opacity);
+        opacity.setOnClickListener(new OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                changeOpacity();
             }
         });
         ivImage = (ImageView) findViewById(R.id.ivImage);
@@ -156,12 +174,19 @@ public class MainActivity extends Activity {
         startActivityForResult(Intent.createChooser(intent, "Select File"),SELECT_FILE);
     }
 
-    private void cameraIntent()
-    {
-        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        startActivityForResult(intent, REQUEST_CAMERA);
+    private String pictureImagePath = "";
+    private void cameraIntent() {
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = timeStamp + ".jpg";
+        File storageDir = Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_PICTURES);
+        pictureImagePath = storageDir.getAbsolutePath() + "/" + imageFileName;
+        File file = new File(pictureImagePath);
+        Uri outputFileUri = Uri.fromFile(file);
+        Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+        cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, outputFileUri);
+        startActivityForResult(cameraIntent, REQUEST_CAMERA);
     }
-
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -175,28 +200,16 @@ public class MainActivity extends Activity {
     }
 
     private void onCaptureImageResult(Intent data) {
-        Bitmap thumbnail = (Bitmap) data.getExtras().get("data");
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        thumbnail.compress(Bitmap.CompressFormat.JPEG, 90, bytes);
+        File imgFile = new File(pictureImagePath);
+        if (imgFile.exists()) {
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+            Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath(),options);
+            ImageView ivimage = (ImageView) findViewById(R.id.ivImage);
+            ivimage.setImageBitmap(myBitmap);
 
-        File destination = new File(Environment.getExternalStorageDirectory(),
-                System.currentTimeMillis() + ".jpg");
-
-        FileOutputStream fo;
-        try {
-            destination.createNewFile();
-            fo = new FileOutputStream(destination);
-            fo.write(bytes.toByteArray());
-            fo.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
         }
-
-        ivImage.setImageBitmap(thumbnail);
     }
-
     @SuppressWarnings("deprecation")
     private void onSelectFromGalleryResult(Intent data) {
 
@@ -213,6 +226,7 @@ public class MainActivity extends Activity {
     }
 
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public void doCartoonify(){
         Bitmap bitmap = ((BitmapDrawable)ivImage.getDrawable()).getBitmap();
         int height = bitmap.getHeight();
@@ -234,16 +248,22 @@ public class MainActivity extends Activity {
         FinalImage = new Mat(height,width,CvType.CV_8UC4);
         dstMat = new Mat(height, width, CvType.CV_8UC4);
         mrgbk = new Mat(height, width, CvType.CV_8UC4);
-
-
+        Mat resizeimage = new Mat();
         Bitmap bmp32 = bitmap.copy(Bitmap.Config.ARGB_8888, true);
 
         // Input Image
         Utils.bitmapToMat(bmp32, InputImage);
-
+        double scale = Math.sqrt(bitmap.getAllocationByteCount()/1250000);
+        if(scale>1) {
+            Size sz = new Size(width / scale, height / scale);
+            Imgproc.resize(InputImage, resizeimage, sz);
+        }
+        else{
+            resizeimage = InputImage;
+        }
 
 //!-- Colour quantisation
-
+//
 //		for(int i=0;i<height;i++)
 //		{
 //			for(int j=0;j<width;j++)
@@ -255,8 +275,6 @@ public class MainActivity extends Activity {
 //					InputImage.put(i,j,bgrarray);
 //			}
 //		}
-
-
 
 // Performing Cartoonisation of image
 
@@ -271,7 +289,7 @@ public class MainActivity extends Activity {
 
 
         // Performing Bilateral Filter
-        Imgproc.cvtColor(InputImage, mrgbk, Imgproc.COLOR_BGRA2BGR);
+        Imgproc.cvtColor(resizeimage, mrgbk, Imgproc.COLOR_BGRA2BGR);
         for(int i=0;i<14;i++)
         {
             if(i%2 == 0)Imgproc.bilateralFilter(mrgbk, dstMat, 9, 9, 7);
@@ -279,37 +297,93 @@ public class MainActivity extends Activity {
             else Imgproc.bilateralFilter(dstMat, mrgbk, 9, 9, 7);
         }
         Imgproc.bilateralFilter(mrgbk, dstMat, 9, 7, 7);
+        if(scale>1) {
+            Size sz2 = new Size(width, height);
+            Imgproc.resize(dstMat, dstMat, sz2);
+        }
         Imgproc.cvtColor(dstMat, dstMat, Imgproc.COLOR_RGB2RGBA);
         Imgproc.cvtColor(edgeImage,edgeImage,Imgproc.COLOR_RGB2RGBA);
         Core.bitwise_and(dstMat,edgeImage,FinalImage);
-        org.opencv.core.Size s = new Size(7,7);
+        Size s = new Size(7,7);
         Imgproc.GaussianBlur(FinalImage, FinalImage, s, 0, 0);
 
         Utils.matToBitmap(FinalImage, bitmap);
         ivImage.setImageBitmap(bitmap);
     }
 
+    private int colordodge(int in1, int in2)
+
+    {
+        float image = (float)in2;
+        float mask = (float)in1;
+        return ((int) ((image == 255) ? image:Math.min(255, (((long)mask << 8 ) / (255 - image)))));
+
+    }
+
+    public Bitmap ColorDodgeBlend(Bitmap Source,Bitmap Layer)
+    {
+        Bitmap base = Source.copy(android.graphics.Bitmap.Config.ARGB_8888, true);
+        Bitmap blend = Layer.copy(android.graphics.Bitmap.Config.ARGB_8888, false);
+
+        IntBuffer buffBase = IntBuffer.allocate(base.getWidth() * base.getHeight());
+        base.copyPixelsToBuffer(buffBase);
+        buffBase.rewind();
+
+        IntBuffer buffBlend = IntBuffer.allocate(blend.getWidth() * blend.getHeight());
+        blend.copyPixelsToBuffer(buffBlend);
+        buffBlend.rewind();
+
+        IntBuffer buffOut = IntBuffer.allocate(base.getWidth() * base.getHeight());
+        buffOut.rewind();
+
+        while (buffOut.position() < buffOut.limit()) {
+            int filterInt = buffBlend.get();
+            int srcInt = buffBase.get();
+
+            int redValueFilter = Color.red(filterInt);
+            int greenValueFilter = Color.green(filterInt);
+            int blueValueFilter = Color.blue(filterInt);
+
+            int redValueSrc = Color.red(srcInt);
+            int greenValueSrc = Color.green(srcInt);
+            int blueValueSrc = Color.blue(srcInt);
+
+            int redValueFinal = colordodge(redValueFilter, redValueSrc);
+            int greenValueFinal = colordodge(greenValueFilter, greenValueSrc);
+            int blueValueFinal = colordodge(blueValueFilter, blueValueSrc);
+
+            int pixel = Color.argb(255, redValueFinal, greenValueFinal, blueValueFinal);
+
+            buffOut.put(pixel);
+        }
+
+        buffOut.rewind();
+
+        base.copyPixelsFromBuffer(buffOut);
+        blend.recycle();
+
+        return base;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public void doPencillSketch(){
 
-        doCartoonify();
-
         Bitmap bitmap = ((BitmapDrawable)ivImage.getDrawable()).getBitmap();
+
         int height = bitmap.getHeight();
         int width = bitmap.getWidth();
 
-        //Image variables
-        Mat InputImage = new Mat();
+        // Image variables
+        Mat InputImage = new Mat(height,width,CvType.CV_8UC4);
         Mat imgGray;
         Mat Inverted_Gray;
-        Mat Dodge_Image;
 
-        Inverted_Gray = new Mat(height,width,CvType.CV_8UC4);
-        imgGray = new Mat(height, width, CvType.CV_8UC4);
-        Dodge_Image = new Mat(height,width,CvType.CV_8UC4);
+        Inverted_Gray = new Mat();
+        imgGray = new Mat(height,width,CvType.CV_8UC4);
 
         Bitmap bmp32 = bitmap.copy(Bitmap.Config.ARGB_8888, true);
 
-        //Input Image
+        // Input Image
         Utils.bitmapToMat(bmp32, InputImage);
 
         // Converting to gray scale
@@ -317,12 +391,21 @@ public class MainActivity extends Activity {
 
         // Converting to pencil sketch
         Core.bitwise_not(imgGray,Inverted_Gray);
-        org.opencv.core.Size s = new Size(7,7);
-        Imgproc.GaussianBlur(Inverted_Gray, Inverted_Gray, s, 0, 0);
-        divide(imgGray,Inverted_Gray,Dodge_Image,256);
+        org.opencv.core.Size s1 = new Size(7,7);
+        Imgproc.GaussianBlur(Inverted_Gray, Inverted_Gray, s1, 0, 0);
 
-        Utils.matToBitmap(Dodge_Image, bitmap);
+        // divide(imgGray,Inverted_Gray,Dodge_Image,256);
+
+        Bitmap bitmap1 = bitmap.copy(Bitmap.Config.ARGB_8888, true);
+        Bitmap bitmap2 = bitmap.copy(Bitmap.Config.ARGB_8888, true);
+
+        Utils.matToBitmap(Inverted_Gray, bitmap1);
+        Utils.matToBitmap(imgGray, bitmap2);
+
+        bitmap = ColorDodgeBlend(bitmap1,bitmap2);
+
         ivImage.setImageBitmap(bitmap);
+
     }
 
     public void applyFilter(){
@@ -394,6 +477,45 @@ public class MainActivity extends Activity {
         Utils.matToBitmap(dst, bmp32);
         ivImage.setImageBitmap(bmp32);
 
+    }
+
+    public void changeOpacity() {
+
+        Bitmap bitmap = ((BitmapDrawable)ivImage.getDrawable()).getBitmap();
+        int height = bitmap.getHeight();
+        int width = bitmap.getWidth();
+
+        Mat InputImage;
+        InputImage = new Mat();
+
+        Mat Temp = new Mat(height, width, CvType.CV_8UC4);
+
+        Utils.bitmapToMat(bitmap, InputImage);
+        List<Mat> Channels = new ArrayList<Mat>();
+
+        Imgproc.cvtColor(InputImage, InputImage, Imgproc.COLOR_BGR2BGRA);
+
+        Core.split(InputImage,Channels);
+        Mat Output_alpha = new Mat(height,width,CvType.CV_8UC4);
+        Mat dst = new Mat(height, width, CvType.CV_8UC4);
+
+        Scalar alpha = new Scalar(0.5);
+
+        Core.multiply(Channels.get(3),alpha,Temp);
+
+//        Output_alpha = Mat.ones(height,width,CvType.CV_8UC1);
+
+//        Core.multiply(Output_alpha,alpha,Output_alpha);
+
+       Output_alpha = Temp;
+
+        List<Mat> lst = Arrays.asList(Channels.get(0), Channels.get(1), Channels.get(2),Output_alpha);
+        Core.merge(lst, dst);
+
+        Bitmap bmp32 = bitmap.copy(Bitmap.Config.ARGB_8888, true);
+
+        Utils.matToBitmap(dst, bmp32);
+        ivImage.setImageBitmap(bmp32);
     }
 
 }

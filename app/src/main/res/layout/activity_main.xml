@@ -1,92 +1,62 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/LinearLayout1"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="10dp" >
+    android:padding="10dp"
+    android:background="@color/colorbg">
+    
+    
+    
+    <ImageView
+    android:id="@+id/ivImage"
+    android:layout_width="333dp"
+    android:layout_height="394dp"
+    android:layout_alignParentStart="true"
+    android:layout_marginRight="8dp"
+    app:layout_constraintRight_toRightOf="parent"
+    android:layout_marginLeft="8dp"
+    app:layout_constraintLeft_toLeftOf="parent"
+    android:layout_marginStart="8dp"
+    android:layout_marginEnd="8dp"
+    app:layout_constraintTop_toTopOf="parent"
+    android:layout_marginTop="28dp" />
+    
+    <ImageView
+    android:id="@+id/thumbnail"
+    android:layout_width="50dp"
+    android:layout_height="50dp"
+    android:layout_below="@+id/ivImage"
+    android:layout_alignParentStart="true"
+    app:layout_constraintRight_toLeftOf="@+id/take"
+    android:layout_marginRight="8dp"
+    android:layout_marginLeft="8dp"
+    app:layout_constraintLeft_toLeftOf="parent"
+    android:layout_marginTop="13dp"
+    app:layout_constraintTop_toBottomOf="@+id/ivImage"
+    app:layout_constraintHorizontal_bias="0.225"
+    android:layout_marginStart="8dp"
+    android:layout_marginEnd="8dp" />
+    
+    <Button
+    android:layout_width="48dp"
+    android:layout_height="48dp"
+    android:id="@+id/take"
+    android:layout_toEndOf="@+id/thumbnail"
+    android:background="@drawable/ic_launcher"
+    android:layout_alignBottom="@+id/thumbnail"
+    android:layout_below="@+id/ivImage"
+    app:layout_constraintBottom_toBottomOf="parent"
+    android:layout_marginBottom="5dp"
+    android:layout_marginEnd="13dp"
+    android:layout_marginLeft="8dp"
+    app:layout_constraintLeft_toLeftOf="@+id/ivImage"
+    android:layout_marginRight="13dp"
+    app:layout_constraintRight_toRightOf="@+id/ivImage"
+    android:layout_marginStart="8dp" />
+    
+    
+</android.support.constraint.ConstraintLayout>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:padding="5dp" >
-
-        <Button
-            android:id="@+id/btnSelectPhoto"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Select Photo" />
-    </LinearLayout>
-
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:padding="10dp">
-
-        <ImageView
-            android:id="@+id/ivImage"
-            android:layout_width="match_parent"
-            android:layout_height="350sp"
-            android:src="@drawable/ic_launcher"
-            android:layout_below="@+id/cartoonify"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true" />
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="30dp"
-            android:id="@+id/test"
-            android:layout_alignBaseline="@+id/cartoonify"
-            android:layout_alignBottom="@+id/cartoonify"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:id="@+id/linearLayout">
-
-        </LinearLayout>
-
-        <Button
-            android:id="@+id/cartoonify"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Cartoonify"
-            android:layout_below="@+id/linearLayout"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true" />
-
-        <Button
-            android:id="@+id/filter"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="filter"
-            android:layout_below="@+id/linearLayout"
-            android:layout_toRightOf="@+id/pencilSketch"
-            android:layout_toEndOf="@+id/pencilSketch" />
-
-        <Button
-            android:id="@+id/pencilSketch"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="pencil Sketch"
-            android:layout_alignParentTop="true"
-            android:layout_toRightOf="@+id/cartoonify"
-            android:layout_toEndOf="@+id/cartoonify" />
-
-        <Button
-            android:id="@+id/opacity"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="opacity"
-            android:layout_alignParentBottom="true"
-            android:layout_toRightOf="@+id/cartoonify"
-            android:layout_toEndOf="@+id/cartoonify"
-            android:layout_marginBottom="132dp" />
-
-    </RelativeLayout>
-
-</LinearLayout>

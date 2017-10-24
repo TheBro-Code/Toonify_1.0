@@ -1,9 +1,5 @@
 package com.example.syamantak.toonify_10;
 
-/**
- * Created by The-Bro Code on 03/10/17.
- */
-
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Activity;

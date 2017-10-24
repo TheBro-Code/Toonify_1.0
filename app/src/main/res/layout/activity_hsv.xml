@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorbg">
+    
+    <ImageView
+    android:id="@+id/hsv_iv"
+    android:layout_width="456dp"
+    android:layout_height="358dp"
+    android:layout_alignParentStart="true"
+    app:layout_constraintTop_toTopOf="parent"
+    android:layout_marginTop="8dp"
+    android:layout_marginRight="8dp"
+    app:layout_constraintRight_toRightOf="parent"
+    android:layout_marginLeft="8dp"
+    app:layout_constraintLeft_toLeftOf="parent"
+    app:layout_constraintHorizontal_bias="0.315"
+    android:layout_marginStart="8dp"
+    android:layout_marginEnd="8dp"
+    android:layout_marginBottom="8dp"
+    app:layout_constraintBottom_toTopOf="@+id/linearLayout2"
+    app:layout_constraintVertical_bias="0.363" />
+    <Button
+    android:layout_width="50dp"
+    android:layout_height="50dp"
+    android:layout_marginRight="8dp"
+    app:layout_constraintRight_toRightOf="@+id/hsv_iv"
+    app:layout_constraintBottom_toBottomOf="@+id/hsv_iv"
+    android:layout_marginBottom="8dp"
+    android:background="@drawable/done"
+    android:id="@+id/hsv_done"/>
+    <LinearLayout
+        android:layout_width="351dp"
+        android:layout_height="119dp"
+        android:orientation="vertical"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:id="@+id/linearLayout2"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@+id/hsv_iv"
+        android:layout_marginRight="8dp"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_marginLeft="8dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="36dp"
+        app:layout_constraintHorizontal_bias="0.555"
+        tools:layout_editor_absoluteY="346dp">
+        
+        <TextView
+        android:id="@+id/texthue"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Hue :0"
+        tools:layout_editor_absoluteY="0dp"
+        tools:layout_editor_absoluteX="8dp"
+        android:textColor="@android:color/white"/>
+        
+        <SeekBar
+        android:id="@+id/huebar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:max="511"
+        android:progress="256"
+        tools:layout_editor_absoluteY="0dp"
+        tools:layout_editor_absoluteX="8dp" />
+        
+        <TextView
+        android:id="@+id/textsat"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Saturation :0"
+        tools:layout_editor_absoluteY="0dp"
+        tools:layout_editor_absoluteX="8dp"
+        android:textColor="@android:color/white"/>
+        
+        <SeekBar
+        android:id="@+id/satbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:max="511"
+        android:progress="256"
+        tools:layout_editor_absoluteY="0dp"
+        tools:layout_editor_absoluteX="8dp" />
+        
+        <TextView
+        android:id="@+id/textval"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Value :0"
+        tools:layout_editor_absoluteY="0dp"
+        tools:layout_editor_absoluteX="8dp"
+        android:textColor="@android:color/white"/>
+        
+        <SeekBar
+        android:id="@+id/valbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:max="511"
+        android:progress="256"
+        tools:layout_editor_absoluteY="0dp"
+        tools:layout_editor_absoluteX="8dp" />
+    </LinearLayout>
+    
+</android.support.constraint.ConstraintLayout>
+

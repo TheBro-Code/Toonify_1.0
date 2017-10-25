@@ -1,11 +1,13 @@
 package com.example.syamantak.toonify_10;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -16,6 +18,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.util.UUID;
 
 public class Interface extends AppCompatActivity {
 
@@ -53,25 +56,56 @@ public class Interface extends AppCompatActivity {
         });
     }
 
-    private void saveFile(){
-        String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + File.separator + "Toonify";
+//    private void saveFile(){
+//        String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + File.separator + "Toonify";
+//
+//        File outputDir= new File(path);
+//
+//
+//        outputDir.mkdirs();
+//        File newFile = new File(path+"/"+"test.png");
+//        FileOutputStream out = null;
+//        try {
+//            out = new FileOutputStream(nexwFile);
+//        } catch (FileNotFoundException e) {
+//            e.printStackTrace();
+//        }
+//        bmp.compress(Bitmap.CompressFormat.PNG, 100, out);
+//        Intent intent = new Intent();
+//        setResult(RESULT_OK,intent);
+//        finish();
+//    }
 
-        File outputDir= new File(path);
+    private void saveFile() {
 
+        String fileName = UUID.randomUUID().toString() + ".jpg";
 
-        outputDir.mkdirs();
-        File newFile = new File(path+"/"+"test.png");
-        FileOutputStream out = null;
+        File direct = new File(Environment.getExternalStorageDirectory() + "/Toonify");
+
+        if (!direct.exists()) {
+            File wallpaperDirectory = new File("/sdcard/Toonify/");
+            wallpaperDirectory.mkdirs();
+        }
+
+        File file = new File(new File("/sdcard/Toonify/"), fileName);
+
+        if (file.exists()) {
+            file.delete();
+        }
         try {
-            out = new FileOutputStream(newFile);
-        } catch (FileNotFoundException e) {
+            FileOutputStream out = new FileOutputStream(file);
+            bmp.compress(Bitmap.CompressFormat.JPEG, 100, out);
+            MediaStore.Images.Media.insertImage(getContentResolver(), bmp, "test.png" , "New Image");
+            Intent intent = new Intent();
+            setResult(RESULT_OK,intent);
+            finish();
+            out.flush();
+            out.close();
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        bmp.compress(Bitmap.CompressFormat.PNG, 100, out);
-        Intent intent = new Intent();
-        setResult(RESULT_OK,intent);
-        finish();
     }
+
     private void editImage(){
         Bitmap bmp = ((BitmapDrawable) interface_iv.getDrawable()).getBitmap();
 

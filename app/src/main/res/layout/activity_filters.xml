@@ -4,28 +4,28 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.syamantak.toonify_10.Filters"
+    tools:context="thebro_code.toonify.Filters"
     android:background="@color/colorbg">
-
+    
     <ImageView
-        android:layout_width="365dp"
-        android:layout_height="368dp"
-        android:id="@+id/filter_iv"
-        app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginTop="8dp"
-        android:layout_marginLeft="8dp"
-        app:layout_constraintLeft_toLeftOf="parent" />
-
+    android:layout_width="365dp"
+    android:layout_height="368dp"
+    android:id="@+id/filter_iv"
+    app:layout_constraintTop_toTopOf="parent"
+    android:layout_marginTop="8dp"
+    android:layout_marginLeft="8dp"
+    app:layout_constraintLeft_toLeftOf="parent" />
+    
     <Button
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:background="@drawable/done"
-        android:layout_marginRight="8dp"
-        android:id="@+id/filters_done"
-        app:layout_constraintRight_toRightOf="@+id/filter_iv"
-        app:layout_constraintBottom_toBottomOf="@+id/filter_iv"
-        android:layout_marginBottom="8dp" />
-
+    android:layout_width="50dp"
+    android:layout_height="50dp"
+    android:background="@drawable/done"
+    android:layout_marginRight="8dp"
+    android:id="@+id/filters_done"
+    app:layout_constraintRight_toRightOf="@+id/filter_iv"
+    app:layout_constraintBottom_toBottomOf="@+id/filter_iv"
+    android:layout_marginBottom="8dp" />
+    
     <HorizontalScrollView
         android:layout_width="361dp"
         android:layout_height="104dp"
@@ -38,7 +38,7 @@
         app:layout_constraintRight_toRightOf="parent"
         android:layout_marginLeft="8dp"
         app:layout_constraintLeft_toLeftOf="parent">
-
+        
         <LinearLayout
             android:id="@+id/linear"
             android:layout_width="wrap_content"
@@ -46,5 +46,6 @@
             android:orientation="horizontal">
         </LinearLayout>
     </HorizontalScrollView>
-
+    
 </android.support.constraint.ConstraintLayout>
+

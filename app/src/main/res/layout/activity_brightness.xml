@@ -12,7 +12,7 @@
     android:layout_height="wrap_content"
     android:layout_gravity="center"
     android:text="Change Brightness"
-    android:textColor="@android:color/white"
+    android:textColor="@android:color/black"
     tools:layout_editor_absoluteY="0dp"
     tools:layout_editor_absoluteX="0dp" />
     
@@ -30,7 +30,7 @@
     android:layout_height="wrap_content"
     android:layout_gravity="center"
     android:text="Change Contrast"
-    android:textColor="@android:color/white"
+    android:textColor="@android:color/black"
     tools:layout_editor_absoluteY="0dp"
     tools:layout_editor_absoluteX="0dp" />
     
@@ -65,4 +65,3 @@
     </android.support.constraint.ConstraintLayout>
     
 </LinearLayout>
-

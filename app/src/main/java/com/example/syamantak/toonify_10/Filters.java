@@ -9,17 +9,24 @@ import android.graphics.Color;
 import android.graphics.LinearGradient;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
+import android.graphics.RadialGradient;
 import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.drawable.BitmapDrawable;
+import android.os.AsyncTask;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
@@ -38,18 +45,40 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.opencv.imgproc.Imgproc.ADAPTIVE_THRESH_MEAN_C;
+import static org.opencv.imgproc.Imgproc.COLOR_GRAY2RGB;
+import static org.opencv.imgproc.Imgproc.THRESH_BINARY;
+import static org.opencv.imgproc.Imgproc.adaptiveThreshold;
+import static org.opencv.imgproc.Imgproc.cvtColor;
+
 public class Filters extends AppCompatActivity {
     private ImageView filter_iv;
     private Button filters_done;
     private Bitmap bmp;
+    private ProgressBar progressBar;
+    private int progressStatus = 0;
+    private Handler handler = new Handler();
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_filters);
-        String filename = getIntent().getStringExtra("image");
+        Bundle b = getIntent().getExtras();
+        String filename = b.getString("image");
+        String TAG = "syamantak debug";
+        Log.d(TAG, filename);
+        int height = b.getInt("height");
+        int width = b.getInt("width");
         try {
             FileInputStream is = this.openFileInput(filename);
-            bmp = BitmapFactory.decodeStream(is);
+            Bitmap inpBmp = BitmapFactory.decodeStream(is);
+            Mat inp = new Mat(inpBmp.getHeight(),inpBmp.getWidth(), CvType.CV_8UC4);
+            Utils.bitmapToMat(inpBmp,inp);
+            Size sz = new Size(width,height);
+            Mat fin = new Mat(height,width,CvType.CV_8UC4);
+            Imgproc.resize(inp,fin,sz);
+            bmp = Bitmap.createBitmap(width,height, Bitmap.Config.ARGB_8888);
+            Utils.matToBitmap(fin,bmp);
             is.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -63,219 +92,436 @@ public class Filters extends AppCompatActivity {
                 filtersDone();
             }
         });
+        progressBar = (ProgressBar) findViewById(R.id.progressBar);
         LinearLayout layout = (LinearLayout) findViewById(R.id.linear);
         addCartoonify(layout);
         addPencilSketch(layout);
         addSepia(layout);
+        addVignette(layout);
         addGrayscale(layout);
         addColorEmboss(layout);
         addGrayscaleEmboss(layout);
         addReflection(layout);
-        addRotation(layout);
     }
-
+    
     private void addCartoonify(LinearLayout layout){
         ImageView imageView = new ImageView(this);
         imageView.setPadding(4, 4, 4, 4);
         imageView.setAdjustViewBounds(true);
         imageView.setMaxHeight(350);
-        imageView.setMaxWidth(250);
+        imageView.setMaxWidth(350);
         Mat help1 = new Mat(bmp.getHeight(),bmp.getWidth(), CvType.CV_8UC4);
         Utils.bitmapToMat(bmp,help1);
-        Mat help2 = new Mat(350,250,CvType.CV_8UC4);
-        Size sz = new Size(250,350);
+        Mat help2 = new Mat(350,350,CvType.CV_8UC4);
+        Size sz = new Size(350,350);
         Imgproc.resize(help1,help2,sz);
-        Bitmap bmpPrime = Bitmap.createBitmap(250,350, Bitmap.Config.ARGB_8888);
+        Bitmap bmpPrime = Bitmap.createBitmap(350,350, Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(help2,bmpPrime);
         imageView.setImageBitmap(doCartoonify(bmpPrime));
         imageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Bitmap help = doCartoonify(bmp);
-                filter_iv.setImageBitmap(help);
+                new AsyncTaskCartoonify().execute();
             }
         });
         layout.addView(imageView);
     }
-
-
+    
+    private class AsyncTaskCartoonify extends AsyncTask<Void, Void, Bitmap> {
+        
+        @Override
+        protected Bitmap doInBackground(Void... args) {
+            Bitmap help = doCartoonify(bmp);
+            return help;
+        }
+        
+        @Override
+        protected void onPostExecute(Bitmap result) {
+            progressBar.setVisibility(View.INVISIBLE);
+            super.onPostExecute(result);
+            filter_iv.setImageBitmap(result);
+        }
+        
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressBar.setVisibility(View.VISIBLE);
+        }
+    }
+    
+    
     private void addPencilSketch(LinearLayout layout){
         ImageView imageView = new ImageView(this);
         imageView.setPadding(4, 4, 4, 4);
         imageView.setAdjustViewBounds(true);
         imageView.setMaxHeight(350);
-        imageView.setMaxWidth(250);
+        imageView.setMaxWidth(350);
         Mat help1 = new Mat(bmp.getHeight(),bmp.getWidth(), CvType.CV_8UC4);
         Utils.bitmapToMat(bmp,help1);
-        Mat help2 = new Mat(350,250,CvType.CV_8UC4);
-        Size sz = new Size(250,350);
+        Mat help2 = new Mat(350,350,CvType.CV_8UC4);
+        Size sz = new Size(350,350);
         Imgproc.resize(help1,help2,sz);
-        Bitmap bmpPrime = Bitmap.createBitmap(250,350, Bitmap.Config.ARGB_8888);
+        Bitmap bmpPrime = Bitmap.createBitmap(350,350, Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(help2,bmpPrime);
         imageView.setImageBitmap(doPencilSketch(bmpPrime));
         imageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Bitmap help = doPencilSketch(bmp);
-                filter_iv.setImageBitmap(help);
+                new AsyncTaskPencilSketch().execute();
             }
         });
         layout.addView(imageView);
     }
-
-
+    
+    private class AsyncTaskPencilSketch extends AsyncTask<Void, Void, Bitmap> {
+        
+        @Override
+        protected Bitmap doInBackground(Void... args) {
+            Bitmap help = doPencilSketch(bmp);
+            return help;
+        }
+        
+        @Override
+        protected void onPostExecute(Bitmap result) {
+            progressBar.setVisibility(View.INVISIBLE);
+            super.onPostExecute(result);
+            filter_iv.setImageBitmap(result);
+        }
+        
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressBar.setVisibility(View.VISIBLE);
+        }
+    }
+    
     private void addSepia(LinearLayout layout){
         ImageView imageView = new ImageView(this);
         imageView.setPadding(4, 4, 4, 4);
         imageView.setAdjustViewBounds(true);
         imageView.setMaxHeight(350);
-        imageView.setMaxWidth(250);
+        imageView.setMaxWidth(350);
         Mat help1 = new Mat(bmp.getHeight(),bmp.getWidth(), CvType.CV_8UC4);
         Utils.bitmapToMat(bmp,help1);
-        Mat help2 = new Mat(350,250,CvType.CV_8UC4);
-        Size sz = new Size(250,350);
+        Mat help2 = new Mat(350,350,CvType.CV_8UC4);
+        Size sz = new Size(350,350);
         Imgproc.resize(help1,help2,sz);
-        Bitmap bmpPrime = Bitmap.createBitmap(250,350, Bitmap.Config.ARGB_8888);
+        Bitmap bmpPrime = Bitmap.createBitmap(350,350, Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(help2,bmpPrime);
         imageView.setImageBitmap(doSepia(bmpPrime));
         imageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Bitmap help = doSepia(bmp);
-                filter_iv.setImageBitmap(help);
+                new AsyncTaskAddSepia().execute();
             }
         });
         layout.addView(imageView);
     }
-
-
+    
+    private class AsyncTaskAddSepia extends AsyncTask<Void, Void, Bitmap> {
+        
+        @Override
+        protected Bitmap doInBackground(Void... args) {
+            Bitmap help = doSepia(bmp);
+            return help;
+        }
+        
+        @Override
+        protected void onPostExecute(Bitmap result) {
+            progressBar.setVisibility(View.INVISIBLE);
+            super.onPostExecute(result);
+            filter_iv.setImageBitmap(result);
+        }
+        
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressBar.setVisibility(View.VISIBLE);
+        }
+    }
+    
+    
     private void addGrayscale(LinearLayout layout){
         ImageView imageView = new ImageView(this);
         imageView.setPadding(4, 4, 4, 4);
         imageView.setAdjustViewBounds(true);
         imageView.setMaxHeight(350);
-        imageView.setMaxWidth(250);
+        imageView.setMaxWidth(350);
         Mat help1 = new Mat(bmp.getHeight(),bmp.getWidth(), CvType.CV_8UC4);
         Utils.bitmapToMat(bmp,help1);
-        Mat help2 = new Mat(350,250,CvType.CV_8UC4);
-        Size sz = new Size(250,350);
+        Mat help2 = new Mat(350,350,CvType.CV_8UC4);
+        Size sz = new Size(350,350);
         Imgproc.resize(help1,help2,sz);
-        Bitmap bmpPrime = Bitmap.createBitmap(250,350, Bitmap.Config.ARGB_8888);
+        Bitmap bmpPrime = Bitmap.createBitmap(350,350, Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(help2,bmpPrime);
         imageView.setImageBitmap(doGrayscale(bmpPrime));
         imageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Bitmap help = doGrayscale(bmp);
-                filter_iv.setImageBitmap(help);
+                new AsyncTaskGrayScale().execute();
             }
         });
         layout.addView(imageView);
     }
-
+    
+    private class AsyncTaskGrayScale extends AsyncTask<Void, Void, Bitmap> {
+        
+        @Override
+        protected Bitmap doInBackground(Void... args) {
+            Bitmap help = doGrayscale(bmp);
+            return help;
+        }
+        
+        @Override
+        protected void onPostExecute(Bitmap result) {
+            progressBar.setVisibility(View.INVISIBLE);
+            super.onPostExecute(result);
+            filter_iv.setImageBitmap(result);
+        }
+        
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressBar.setVisibility(View.VISIBLE);
+        }
+    }
+    
     private void addColorEmboss(LinearLayout layout){
         ImageView imageView = new ImageView(this);
         imageView.setPadding(4, 4, 4, 4);
         imageView.setAdjustViewBounds(true);
         imageView.setMaxHeight(350);
-        imageView.setMaxWidth(250);
+        imageView.setMaxWidth(350);
         Mat help1 = new Mat(bmp.getHeight(),bmp.getWidth(), CvType.CV_8UC4);
         Utils.bitmapToMat(bmp,help1);
-        Mat help2 = new Mat(350,250,CvType.CV_8UC4);
-        Size sz = new Size(250,350);
+        Mat help2 = new Mat(350,350,CvType.CV_8UC4);
+        Size sz = new Size(350,350);
         Imgproc.resize(help1,help2,sz);
-        Bitmap bmpPrime = Bitmap.createBitmap(250,350, Bitmap.Config.ARGB_8888);
+        Bitmap bmpPrime = Bitmap.createBitmap(350,350, Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(help2,bmpPrime);
         imageView.setImageBitmap(emboss(bmpPrime));
         imageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Bitmap help = emboss(bmp);
-                filter_iv.setImageBitmap(help);
+                new AsyncTaskColorEmboss().execute();
             }
         });
         layout.addView(imageView);
     }
-
+    
+    private class AsyncTaskColorEmboss extends AsyncTask<Void, Void, Bitmap> {
+        
+        @Override
+        protected Bitmap doInBackground(Void... args) {
+            Bitmap help = emboss(bmp);
+            return help;
+        }
+        
+        @Override
+        protected void onPostExecute(Bitmap result) {
+            progressBar.setVisibility(View.INVISIBLE);
+            super.onPostExecute(result);
+            filter_iv.setImageBitmap(result);
+        }
+        
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressBar.setVisibility(View.VISIBLE);
+        }
+    }
+    
     private void addGrayscaleEmboss(LinearLayout layout){
         ImageView imageView = new ImageView(this);
         imageView.setPadding(4, 4, 4, 4);
         imageView.setAdjustViewBounds(true);
         imageView.setMaxHeight(350);
-        imageView.setMaxWidth(250);
+        imageView.setMaxWidth(350);
         Mat help1 = new Mat(bmp.getHeight(),bmp.getWidth(), CvType.CV_8UC4);
         Utils.bitmapToMat(bmp,help1);
-        Mat help2 = new Mat(350,250,CvType.CV_8UC4);
-        Size sz = new Size(250,350);
+        Mat help2 = new Mat(350,350,CvType.CV_8UC4);
+        Size sz = new Size(350,350);
         Imgproc.resize(help1,help2,sz);
-        Bitmap bmpPrime = Bitmap.createBitmap(250,350, Bitmap.Config.ARGB_8888);
+        Bitmap bmpPrime = Bitmap.createBitmap(350,350, Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(help2,bmpPrime);
         imageView.setImageBitmap(gray_emboss(bmpPrime));
         imageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Bitmap help = gray_emboss(bmp);
-                filter_iv.setImageBitmap(help);
+                new AsyncTaskGrayscaleEmboss().execute();
             }
         });
         layout.addView(imageView);
     }
-
+    
+    private class AsyncTaskGrayscaleEmboss extends AsyncTask<Void, Void, Bitmap> {
+        
+        @Override
+        protected Bitmap doInBackground(Void... args) {
+            Bitmap help = gray_emboss(bmp);
+            return help;
+        }
+        
+        @Override
+        protected void onPostExecute(Bitmap result) {
+            progressBar.setVisibility(View.INVISIBLE);
+            super.onPostExecute(result);
+            filter_iv.setImageBitmap(result);
+        }
+        
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressBar.setVisibility(View.VISIBLE);
+        }
+    }
+    
+    private void addVignette(LinearLayout layout){
+        ImageView imageView = new ImageView(this);
+        imageView.setPadding(4, 4, 4, 4);
+        imageView.setAdjustViewBounds(true);
+        imageView.setMaxHeight(350);
+        imageView.setMaxWidth(350);
+        Mat help1 = new Mat(bmp.getHeight(),bmp.getWidth(), CvType.CV_8UC4);
+        Utils.bitmapToMat(bmp,help1);
+        Mat help2 = new Mat(350,350,CvType.CV_8UC4);
+        Size sz = new Size(350,350);
+        Imgproc.resize(help1,help2,sz);
+        Bitmap bmpPrime = Bitmap.createBitmap(350,350, Bitmap.Config.ARGB_8888);
+        Utils.matToBitmap(help2,bmpPrime);
+        imageView.setImageBitmap(applyVignette(bmpPrime));
+        imageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                new AsyncTaskVignette().execute();
+            }
+        });
+        layout.addView(imageView);
+    }
+    
+    private class AsyncTaskVignette extends AsyncTask<Void, Void, Bitmap> {
+        
+        @Override
+        protected Bitmap doInBackground(Void... args) {
+            Bitmap help = applyVignette(bmp);
+            return help;
+        }
+        
+        @Override
+        protected void onPostExecute(Bitmap result) {
+            progressBar.setVisibility(View.INVISIBLE);
+            super.onPostExecute(result);
+            filter_iv.setImageBitmap(result);
+        }
+        
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressBar.setVisibility(View.VISIBLE);
+        }
+    }
+    
     private void addReflection(LinearLayout layout){
         ImageView imageView = new ImageView(this);
         imageView.setPadding(4, 4, 4, 4);
         imageView.setAdjustViewBounds(true);
         imageView.setMaxHeight(350);
-        imageView.setMaxWidth(250);
+        imageView.setMaxWidth(350);
         Mat help1 = new Mat(bmp.getHeight(),bmp.getWidth(), CvType.CV_8UC4);
         Utils.bitmapToMat(bmp,help1);
-        Mat help2 = new Mat(350,250,CvType.CV_8UC4);
-        Size sz = new Size(250,350);
+        Mat help2 = new Mat(350,350,CvType.CV_8UC4);
+        Size sz = new Size(350,350);
         Imgproc.resize(help1,help2,sz);
-        Bitmap bmpPrime = Bitmap.createBitmap(250,350, Bitmap.Config.ARGB_8888);
+        Bitmap bmpPrime = Bitmap.createBitmap(350,350, Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(help2,bmpPrime);
         imageView.setImageBitmap(applyReflection(bmpPrime));
         imageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Bitmap help = applyReflection(bmp);
-                filter_iv.setImageBitmap(help);
+                new AsyncTaskAddReflection().execute();
             }
         });
         layout.addView(imageView);
     }
-
+    
+    private class AsyncTaskAddReflection extends AsyncTask<Void, Void, Bitmap> {
+        
+        @Override
+        protected Bitmap doInBackground(Void... args) {
+            Bitmap help = applyReflection(bmp);
+            return help;
+        }
+        
+        @Override
+        protected void onPostExecute(Bitmap result) {
+            progressBar.setVisibility(View.INVISIBLE);
+            super.onPostExecute(result);
+            filter_iv.setImageBitmap(result);
+        }
+        
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressBar.setVisibility(View.VISIBLE);
+        }
+    }
+    
     private void addRotation(LinearLayout layout){
         ImageView imageView = new ImageView(this);
         imageView.setPadding(4, 4, 4, 4);
         imageView.setAdjustViewBounds(true);
         imageView.setMaxHeight(350);
-        imageView.setMaxWidth(250);
+        imageView.setMaxWidth(350);
         Mat help1 = new Mat(bmp.getHeight(),bmp.getWidth(), CvType.CV_8UC4);
         Utils.bitmapToMat(bmp,help1);
-        Mat help2 = new Mat(350,250,CvType.CV_8UC4);
-        Size sz = new Size(250,350);
+        Mat help2 = new Mat(350,350,CvType.CV_8UC4);
+        Size sz = new Size(350,350);
         Imgproc.resize(help1,help2,sz);
-        Bitmap bmpPrime = Bitmap.createBitmap(250,350, Bitmap.Config.ARGB_8888);
+        Bitmap bmpPrime = Bitmap.createBitmap(350,350, Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(help2,bmpPrime);
         imageView.setImageBitmap(rotate(bmpPrime,30));
         imageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Bitmap help = rotate(bmp,30);
-                filter_iv.setImageBitmap(help);
+                new AsyncTaskRotate().execute();
             }
         });
         layout.addView(imageView);
     }
-
-
-
-
-
+    
+    private class AsyncTaskRotate extends AsyncTask<Void, Void, Bitmap> {
+        
+        @Override
+        protected Bitmap doInBackground(Void... args) {
+            Bitmap help = rotate(bmp,30);
+            return help;
+        }
+        
+        @Override
+        protected void onPostExecute(Bitmap result) {
+            progressBar.setVisibility(View.INVISIBLE);
+            super.onPostExecute(result);
+            filter_iv.setImageBitmap(result);
+        }
+        
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressBar.setVisibility(View.VISIBLE);
+        }
+    }
+    
+    private void addCrop(LinearLayout layout){
+        
+    }
+    
+    
+    
+    
+    
     //Implemention of Filters
-
-
+    
+    
     private Bitmap doCartoonify(Bitmap src){
         Bitmap bitmap = src.copy(Bitmap.Config.ARGB_8888,true);
         int height = bitmap.getHeight();
@@ -295,9 +541,9 @@ public class Filters extends AppCompatActivity {
         mrgbk = new Mat(height, width, CvType.CV_8UC4);
         Mat resizeimage = new Mat();
         Bitmap bmp32 = bitmap.copy(Bitmap.Config.ARGB_8888, true);
-
+        
         Utils.bitmapToMat(bmp32, InputImage);
-        double scale = Math.sqrt(bitmap.getAllocationByteCount()/1250000);
+        double scale = Math.sqrt(bitmap.getAllocationByteCount()/1350000);
         if(scale>1){
             Size sz = new Size(width/scale, height/scale);
             Imgproc.resize(InputImage,resizeimage, sz);
@@ -305,21 +551,29 @@ public class Filters extends AppCompatActivity {
         else{
             resizeimage = InputImage;
         }
-        Imgproc.cvtColor(InputImage, imgGray, Imgproc.COLOR_RGB2GRAY);
+        cvtColor(InputImage, imgGray, Imgproc.COLOR_RGB2GRAY);
         Imgproc.medianBlur(imgGray,imgGray, 7);
-        Imgproc.Canny(imgGray, imgCanny, 50, 150);
-        Imgproc.cvtColor(imgCanny,imgCanny,Imgproc.COLOR_GRAY2RGB);
-        Core.bitwise_not(imgCanny,edgeImage);
-        Imgproc.cvtColor(resizeimage, mrgbk, Imgproc.COLOR_BGRA2BGR);
+        //Imgproc.Canny(imgGray, imgCanny, 50, 150);
+        //Imgproc.cvtColor(imgCanny,imgCanny,Imgproc.COLOR_GRAY2RGB);
+        if(scale > 1) {
+            adaptiveThreshold(imgGray, edgeImage, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY, 15, 4);
+            Imgproc.cvtColor(edgeImage, edgeImage, COLOR_GRAY2RGB);
+        }
+        else {
+            adaptiveThreshold(imgGray, edgeImage, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY, 9, 6);
+            Imgproc.cvtColor(edgeImage, edgeImage, COLOR_GRAY2RGB);
+        }
+        //Core.bitwise_not(imgCanny,edgeImage);
+        cvtColor(resizeimage, mrgbk, Imgproc.COLOR_BGRA2BGR);
         for(int i=0;i<14;i++)
         {
             if(i%2 == 0)Imgproc.bilateralFilter(mrgbk, dstMat, 9, 9, 7);
-
+            
             else Imgproc.bilateralFilter(dstMat, mrgbk, 9, 9, 7);
         }
         Imgproc.bilateralFilter(mrgbk, dstMat, 9, 7, 7);
-        Imgproc.cvtColor(dstMat, dstMat, Imgproc.COLOR_RGB2RGBA);
-        Imgproc.cvtColor(edgeImage,edgeImage,Imgproc.COLOR_RGB2RGBA);
+        cvtColor(dstMat, dstMat, Imgproc.COLOR_RGB2RGBA);
+        cvtColor(edgeImage,edgeImage,Imgproc.COLOR_RGB2RGBA);
         if(scale>1){
             Size sz2 = new Size(width,height);
             Imgproc.resize(dstMat,dstMat,sz2);
@@ -330,57 +584,58 @@ public class Filters extends AppCompatActivity {
         Utils.matToBitmap(FinalImage, bitmap);
         return bitmap;
     }
+    
     private int colordodge(int in1, int in2) {
         float image = (float)in2;
         float mask = (float)in1;
         return ((int) ((image == 255) ? image:Math.min(255, (((long)mask << 8 ) / (255 - image)))));
     }
-
+    
     public Bitmap ColorDodgeBlend(Bitmap Source,Bitmap Layer)
     {
         Bitmap base = Source.copy(android.graphics.Bitmap.Config.ARGB_8888, true);
         Bitmap blend = Layer.copy(android.graphics.Bitmap.Config.ARGB_8888, false);
-
+        
         IntBuffer buffBase = IntBuffer.allocate(base.getWidth() * base.getHeight());
         base.copyPixelsToBuffer(buffBase);
         buffBase.rewind();
-
+        
         IntBuffer buffBlend = IntBuffer.allocate(blend.getWidth() * blend.getHeight());
         blend.copyPixelsToBuffer(buffBlend);
         buffBlend.rewind();
-
+        
         IntBuffer buffOut = IntBuffer.allocate(base.getWidth() * base.getHeight());
         buffOut.rewind();
-
+        
         while (buffOut.position() < buffOut.limit()) {
             int filterInt = buffBlend.get();
             int srcInt = buffBase.get();
-
+            
             int redValueFilter = Color.red(filterInt);
             int greenValueFilter = Color.green(filterInt);
             int blueValueFilter = Color.blue(filterInt);
-
+            
             int redValueSrc = Color.red(srcInt);
             int greenValueSrc = Color.green(srcInt);
             int blueValueSrc = Color.blue(srcInt);
-
+            
             int redValueFinal = colordodge(redValueFilter, redValueSrc);
             int greenValueFinal = colordodge(greenValueFilter, greenValueSrc);
             int blueValueFinal = colordodge(blueValueFilter, blueValueSrc);
-
+            
             int pixel = Color.argb(255, redValueFinal, greenValueFinal, blueValueFinal);
-
+            
             buffOut.put(pixel);
         }
-
+        
         buffOut.rewind();
-
+        
         base.copyPixelsFromBuffer(buffOut);
         blend.recycle();
-
+        
         return base;
     }
-
+    
     public Bitmap doPencilSketch(Bitmap src){
         Bitmap bitmap = src.copy(Bitmap.Config.ARGB_8888,true);
         int height = bitmap.getHeight();
@@ -392,9 +647,9 @@ public class Filters extends AppCompatActivity {
         imgGray = new Mat(height, width, CvType.CV_8UC4);
         Bitmap bmp32 = bitmap.copy(Bitmap.Config.ARGB_8888, true);
         Utils.bitmapToMat(bmp32, InputImage);
-        Imgproc.cvtColor(InputImage, imgGray, Imgproc.COLOR_RGB2GRAY);
+        cvtColor(InputImage, imgGray, Imgproc.COLOR_RGB2GRAY);
         Core.bitwise_not(imgGray,Inverted_Gray);
-        org.opencv.core.Size s1 = new Size(21,21);
+        org.opencv.core.Size s1 = new Size(17,17);
         Imgproc.GaussianBlur(Inverted_Gray, Inverted_Gray, s1, 0, 0);
         double scale = Math.sqrt(bitmap.getAllocationByteCount()/4000000);
         int height1 = height;
@@ -402,6 +657,7 @@ public class Filters extends AppCompatActivity {
         if(scale>1){
             height1 = (int)(height/scale);
             width1 = (int) (width/scale);
+            s1 = new Size(25,25);
         }
         Mat help1 = new Mat(height1,width1,CvType.CV_8UC4);
         Mat help2 = new Mat(height1,width1,CvType.CV_8UC4);
@@ -422,6 +678,7 @@ public class Filters extends AppCompatActivity {
         Utils.matToBitmap(fin,atLast);
         return atLast;
     }
+    
     public Bitmap doSepia(Bitmap src){
         Bitmap bitmap = src.copy(Bitmap.Config.ARGB_8888,true);
         int height = bitmap.getHeight();
@@ -471,7 +728,7 @@ public class Filters extends AppCompatActivity {
         List<Mat> lst = Arrays.asList(Output_Blue, Output_Green, Output_Red);
         Core.merge(lst, dst);
         Bitmap bmp32 = bitmap.copy(Bitmap.Config.ARGB_8888, true);
-        Imgproc.cvtColor(dst, dst, Imgproc.COLOR_BGR2BGRA);
+        cvtColor(dst, dst, Imgproc.COLOR_BGR2BGRA);
         Utils.matToBitmap(dst, bmp32);
         return bmp32;
     }
@@ -480,150 +737,25 @@ public class Filters extends AppCompatActivity {
         Mat help1 = new Mat(bitmap.getHeight(),bitmap.getWidth(),CvType.CV_8UC4);
         Mat help2 = new Mat(bitmap.getHeight(),bitmap.getWidth(),CvType.CV_8UC4);
         Utils.bitmapToMat(bitmap,help1);
-        Imgproc.cvtColor(help1,help2,Imgproc.COLOR_RGB2GRAY);
+        cvtColor(help1,help2,Imgproc.COLOR_RGB2GRAY);
         Utils.matToBitmap(help2,bitmap);
         return bitmap;
     }
-
-    public Bitmap doOilSketch(Bitmap src)
-    {
-        Bitmap bitmap = src.copy(Bitmap.Config.ARGB_8888,true);
-        int height = bitmap.getHeight();
-        int width = bitmap.getWidth();
-
-        Mat InputImage;
-        Mat Oil_Image;
-        Mat InputImage_1;
-        Mat Oil_Image_1;
-        Mat Final_Image;
-
-        InputImage_1 = new Mat(height, width, CvType.CV_8UC4);
-        Oil_Image_1 = new Mat(height, width, CvType.CV_8UC4);
-        Final_Image = new Mat(height,width,CvType.CV_8UC4);
-
-        Utils.bitmapToMat(bitmap, InputImage_1);
-        Utils.bitmapToMat(bitmap, Oil_Image_1);
-
-        double scale = Math.sqrt(bitmap.getAllocationByteCount()/1000000);
-        int height1 = height;
-        int width1 = width;
-        if(scale>1){
-            height1 = (int)(height/scale);
-            width1 = (int) (width/scale);
-        }
-
-        InputImage = new Mat(height1, width1, CvType.CV_8UC4);
-        Oil_Image = new Mat(height1, width1, CvType.CV_8UC4);
-
-        Size sz = new Size(width1,height1);
-        Imgproc.resize(InputImage_1,InputImage, sz);
-        Imgproc.resize(Oil_Image_1,Oil_Image,sz);
-
-        int radius = 5;
-        int intensity_levels = 20;
-        int size = 256/intensity_levels + 1;
-
-        for (int i=radius;i<height1-radius;i++)
-        {
-            for(int j=radius;j<width1-radius;j++)
-            {
-                int[] intensityCount = new int[size];
-                int[] averageR = new int[size];
-                int[] averageG = new int[size];
-                int[] averageB = new int[size];
-
-                for(int k=0;k<size;k++)
-                {
-                    intensityCount[i] = 0;
-                    averageB[i] = 0;
-                    averageR[i] = 0;
-                    averageG[i] = 0;
-                }
-
-                int currMax = -1;
-                int maxindex = -1;
-
-                for(int k = -radius;k<radius;k++)
-                {
-                    if(k!=0)
-                    {
-                        double[] bgrarray_vertical = InputImage.get(i + k, j);
-                        double[] bgrarray_horizontal = InputImage.get(i, j + k);
-
-                        int curIntensity_vertical = (int) (((bgrarray_vertical[0] + bgrarray_vertical[1] + bgrarray_vertical[2]) / 3) * intensity_levels) / 255;
-                        int curIntensity_horizontal = (int) (((bgrarray_horizontal[0] + bgrarray_horizontal[1] + bgrarray_horizontal[2]) / 3) * intensity_levels) / 255;
-
-                        intensityCount[curIntensity_horizontal]++;
-                        intensityCount[curIntensity_vertical]++;
-
-                        averageR[curIntensity_horizontal] += bgrarray_horizontal[0];
-                        averageR[curIntensity_vertical] += bgrarray_vertical[0];
-
-                        averageG[curIntensity_horizontal] += bgrarray_horizontal[1];
-                        averageG[curIntensity_vertical] += bgrarray_vertical[1];
-
-                        averageB[curIntensity_horizontal] += bgrarray_horizontal[2];
-                        averageB[curIntensity_vertical] += bgrarray_vertical[2];
-                    }
-                }
-
-                for(int h=0;h<size;h++)
-                {
-                    if(currMax < intensityCount[h])
-                    {
-                        currMax = intensityCount[h];
-                        maxindex = h;
-                    }
-                }
-
-                double []bgrarray = Oil_Image.get(i,j);
-
-                if(currMax != 0)
-                {
-                    bgrarray[0] = averageR[maxindex] / currMax;
-                    if(bgrarray[0] > 255)
-                    {
-                        bgrarray[0] = 255;
-                    }
-                    bgrarray[1] = averageG[maxindex] / currMax;
-                    if(bgrarray[1] > 255)
-                    {
-                        bgrarray[1] = 255;
-                    }
-                    bgrarray[2] = averageB[maxindex] / currMax;
-                    if(bgrarray[2] > 255)
-                    {
-                        bgrarray[2] = 255;
-                    }
-                }
-
-                Oil_Image.put(i,j,bgrarray);
-            }
-        }
-
-        Size sz2 = new Size(width,height);
-        Imgproc.resize(Oil_Image,Final_Image, sz2);
-
-        Bitmap bmp32 = bitmap.copy(Bitmap.Config.ARGB_8888, true);
-
-        Utils.matToBitmap(Final_Image,bmp32);
-        return bmp32;
-    }
-
+    
     public Bitmap emboss(Bitmap src)
     {
         Bitmap bitmap = src.copy(Bitmap.Config.ARGB_8888,true);
         int height = bitmap.getHeight();
         int width = bitmap.getWidth();
-
+        
         Mat InputImage = new Mat(height,width,CvType.CV_8UC4);
         Mat convMat = new Mat(3,3,CvType.CV_32F);
         Mat Output_Image = new Mat(height,width,CvType.CV_8UC4);
-
+        
         InputImage = new Mat(height, width, CvType.CV_8UC4);
-
+        
         Utils.bitmapToMat(bitmap,InputImage);
-
+        
         convMat.put(0,0, -2);
         convMat.put(0,1, -1);
         convMat.put(0,2, 0);
@@ -633,32 +765,32 @@ public class Filters extends AppCompatActivity {
         convMat.put(2,0, 0);
         convMat.put(2,1, 1);
         convMat.put(2,2, 2);
-
+        
         Point anchor= new Point(-1,-1);
-
+        
         Imgproc.filter2D(InputImage, Output_Image,-1,convMat,anchor,0);
-
+        
         Bitmap bmp32 = bitmap.copy(Bitmap.Config.ARGB_8888, true);
         Utils.matToBitmap(Output_Image,bmp32);
         return bmp32;
     }
-
+    
     public Bitmap gray_emboss(Bitmap src)
     {
         Bitmap bitmap1 = src.copy(Bitmap.Config.ARGB_8888,true);
         int height = bitmap1.getHeight();
         int width = bitmap1.getWidth();
-
+        
         Bitmap bitmap = doGrayscale(bitmap1);
-
+        
         Mat InputImage = new Mat(height,width,CvType.CV_8UC4);
         Mat convMat = new Mat(3,3,CvType.CV_32F);
         Mat Output_Image = new Mat(height,width,CvType.CV_8UC4);
-
+        
         InputImage = new Mat(height, width, CvType.CV_8UC4);
-
+        
         Utils.bitmapToMat(bitmap,InputImage);
-
+        
         convMat.put(0,0, -2);
         convMat.put(0,1, -1);
         convMat.put(0,2, 0);
@@ -668,54 +800,37 @@ public class Filters extends AppCompatActivity {
         convMat.put(2,0, 0);
         convMat.put(2,1, 1);
         convMat.put(2,2, 2);
-
+        
         Point anchor= new Point(-1,-1);
-
-        Imgproc.filter2D(InputImage, Output_Image,-1,convMat,anchor,128);
-
+        
+        Imgproc.filter2D(InputImage, Output_Image,-1,convMat,anchor,0);
+        
         Bitmap bmp32 = bitmap.copy(Bitmap.Config.ARGB_8888, true);
         Utils.matToBitmap(Output_Image,bmp32);
         return bmp32;
     }
-
-    public void filtersDone(){
-        Bitmap bmp = ((BitmapDrawable) filter_iv.getDrawable()).getBitmap();
-
-        try {
-            String filename = "bitmap.png";
-            FileOutputStream stream = this.openFileOutput(filename, Context.MODE_PRIVATE);
-            bmp.compress(Bitmap.CompressFormat.PNG, 0, stream);
-            stream.close();
-            Intent intent = new Intent();
-            intent.putExtra("image", filename);
-            setResult(RESULT_OK,intent);
-            finish();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
+    
     public static Bitmap applyReflection(Bitmap src) {
-
+        
         Bitmap originalImage = src.copy(Bitmap.Config.ARGB_8888,true);
-
+        
         // gap space between original and reflected
         final int reflectionGap = 4;
         // get image size
         int width = originalImage.getWidth();
         int height = originalImage.getHeight();
-
+        
         // this will not scale but will flip on the Y axis
         Matrix matrix = new Matrix();
         matrix.preScale(1, -1);
-
+        
         // create a Bitmap with the flip matrix applied to it.
         // we only want the bottom half of the image
         Bitmap reflectionImage = Bitmap.createBitmap(originalImage, 0, height/2, width, height/2, matrix, false);
-
+        
         // create a new bitmap with same width but taller to fit reflection
         Bitmap bitmapWithReflection = Bitmap.createBitmap(width, (height + height/2), Bitmap.Config.ARGB_8888);
-
+        
         // create a new Canvas with the bitmap that's big enough for
         // the image plus gap plus reflection
         Canvas canvas = new Canvas(bitmapWithReflection);
@@ -726,31 +841,92 @@ public class Filters extends AppCompatActivity {
         canvas.drawRect(0, height, width, height + reflectionGap, defaultPaint);
         // draw in the reflection
         canvas.drawBitmap(reflectionImage,0, height + reflectionGap, null);
-
+        
         // create a shader that is a linear gradient that covers the reflection
         Paint paint = new Paint();
         LinearGradient shader = new LinearGradient(0, originalImage.getHeight(), 0,
-                bitmapWithReflection.getHeight() + reflectionGap, 0x70ffffff, 0x00ffffff,
-                Shader.TileMode.CLAMP);
+                                                   bitmapWithReflection.getHeight() + reflectionGap, 0x70ffffff, 0x00ffffff,
+                                                   Shader.TileMode.CLAMP);
         // set the paint to use this shader (linear gradient)
         paint.setShader(shader);
         // set the Transfer mode to be porter duff and destination in
         paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_IN));
         // draw a rectangle using the paint with our linear gradient
         canvas.drawRect(0, height, width, bitmapWithReflection.getHeight() + reflectionGap, paint);
-
+        
         return bitmapWithReflection;
     }
-
-
-
+    
+    
+    
     public static Bitmap rotate(Bitmap src, float degree) {
         // create new matrix
         Matrix matrix = new Matrix();
         // setup rotation degree
         matrix.postRotate(degree);
-
+        
         // return new bitmap rotated using matrix
         return Bitmap.createBitmap(src, 0, 0, src.getWidth(), src.getHeight(), matrix, true);
     }
+    
+    
+    public void filtersDone(){
+        Bitmap bmp = ((BitmapDrawable) filter_iv.getDrawable()).getBitmap();
+        
+        try {
+            String filename = "bitmap.png";
+            FileOutputStream stream = this.openFileOutput(filename, Context.MODE_PRIVATE);
+            int height = bmp.getHeight();
+            int width = bmp.getWidth();
+            double scale = 1;
+            if(bmp.getAllocationByteCount()>1350000){
+                scale = Math.sqrt(bmp.getAllocationByteCount()/1350000);
+            }
+            Mat inputImage = new Mat(height, width, CvType.CV_8UC4);
+            Utils.bitmapToMat(bmp,inputImage);
+            Size sz = new Size((int) (width/scale),(int) (height/scale));
+            Mat fin = new Mat((int) (height/scale),(int) (width/scale),CvType.CV_8UC4);
+            Imgproc.resize(inputImage,fin,sz);
+            Bitmap tosend = Bitmap.createBitmap((int) (width/scale),(int) (height/scale), Bitmap.Config.ARGB_8888);
+            Utils.matToBitmap(fin,tosend);
+            tosend.compress(Bitmap.CompressFormat.PNG, 0, stream);
+            stream.close();
+            Intent intent = new Intent();
+            Bundle b = new Bundle();
+            b.putInt("height", height);
+            b.putInt("width",width);
+            b.putString("image", filename);
+            intent.putExtras(b);
+            setResult(RESULT_OK,intent);
+            finish();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    public Bitmap applyVignette(Bitmap src) {
+        Bitmap originalBitmap = src.copy(Bitmap.Config.ARGB_8888,true);
+        
+        float radius = (float) (originalBitmap.getWidth()/1.5);
+        RadialGradient gradient = new RadialGradient(originalBitmap.getWidth()/2, originalBitmap.getHeight()/2, radius, Color.TRANSPARENT, Color.BLACK, Shader.TileMode.CLAMP);
+        
+        Canvas canvas = new Canvas(originalBitmap);
+        canvas.drawARGB(1, 0, 0, 0);
+        
+        final Paint paint = new Paint();
+        paint.setAntiAlias(true);
+        paint.setColor(Color.BLACK);
+        paint.setShader(gradient);
+        
+        final android.graphics.Rect rect = new android.graphics.Rect(0, 0, originalBitmap.getWidth(), originalBitmap.getHeight());
+        final android.graphics.RectF rectf = new android.graphics.RectF(rect);
+        
+        canvas.drawRect(rectf, paint);
+        
+        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
+        canvas.drawBitmap(originalBitmap, rect, rect, paint);
+        
+        return originalBitmap;
+    }
 }
+

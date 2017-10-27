@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="thebro_code.toonify.Edit"
     android:background="@color/colorbg"
     tools:layout_editor_absoluteX="0dp"
     app:layout_constraintBottom_toBottomOf="@+id/edit_iv"
@@ -34,7 +33,7 @@
     android:layout_width="50dp"
     android:layout_height="50dp"
     app:layout_constraintLeft_toRightOf="@+id/edit_filter"
-    android:layout_marginLeft="51dp"
+    android:layout_marginLeft="23dp"
     android:background="@drawable/brct"
     android:id="@+id/edit_contbrit"
     app:layout_constraintBottom_toBottomOf="parent"
@@ -43,7 +42,7 @@
     android:layout_width="50dp"
     android:layout_height="50dp"
     app:layout_constraintLeft_toRightOf="@+id/edit_contbrit"
-    android:layout_marginLeft="52dp"
+    android:layout_marginLeft="24dp"
     android:background="@drawable/hsv"
     android:id="@+id/edit_hsv"
     app:layout_constraintBottom_toBottomOf="parent"
@@ -52,10 +51,18 @@
     android:layout_width="50dp"
     android:layout_height="50dp"
     app:layout_constraintLeft_toRightOf="@+id/edit_hsv"
-    android:layout_marginLeft="49dp"
+    android:layout_marginLeft="101dp"
     android:background="@drawable/done"
     android:id="@+id/edit_done"
     app:layout_constraintBottom_toBottomOf="parent"
     android:layout_marginBottom="8dp" />
+    <Button
+    android:layout_width="50dp"
+    android:layout_height="50dp"
+    app:layout_constraintLeft_toRightOf="@+id/edit_hsv"
+    android:layout_marginLeft="25dp"
+    android:background="@drawable/rotate"
+    android:id="@+id/edit_rotate"
+    app:layout_constraintBottom_toBottomOf="parent"
+    android:layout_marginBottom="8dp" />
 </android.support.constraint.ConstraintLayout>
-

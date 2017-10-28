@@ -12,7 +12,6 @@ import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -200,7 +199,7 @@ public class HSV extends AppCompatActivity {
     }
 
     /**
-     * Function defining how to process the bmp Bitmap using SeekBar data
+     * Function defining how to process the bmp Bitmap using data from the SeekBars
      * @return Finally processed bmp Bitmap
      */
     private Bitmap hsv(){

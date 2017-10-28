@@ -42,16 +42,17 @@ public class Rotate extends AppCompatActivity {
     private TextView rotateText;
     // Bitmap variable for storing the bitmap coming from the Edit activity
     private Bitmap bmp;
-    @Override
+
     /**
      * This function sets the layout of the activity, assigns the global value to their corresponding values by linking them to the ids of the objects on it's creation.
      */
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // This function call sets the layout to the on defined in activity_rotate
         setContentView(R.layout.activity_rotate);
         // imageDisplay is assigned the corresponding ImageView
-        imageDisplay = (ImageView) findViewById(R.id.hsv_iv);
+        imageDisplay = (ImageView) findViewById(R.id.rotate_iv);
         // done is assigned the corresponding Button
         done = (Button) findViewById(R.id.rotate_button);
         // antickcwise is assigned the corresponding Button

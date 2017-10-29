@@ -22,12 +22,18 @@ import org.opencv.imgproc.Imgproc;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 
-public class Edit extends AppCompatActivity {
+public class    Edit extends AppCompatActivity {
     private int EDIT_FILTER = 0, EDIT_CONTBRIT = 1, EDIT_HSV = 2, EDIT_ROTATE = 3;
     private ImageView edit_iv;
     private Button edit_filter, edit_contbrit, edit_hsv, edit_done, edit_rotate, edit_resize;
     private Bitmap bmp;
     @Override
+
+    /**
+     * In the Oncreate method various layout elements(textviews,buttons,imageviews) of the layout are declared and initialised.
+     * The onclick method of the various buttons on this activity are also specified.
+     * Also the imageView edit_iv is set equal to the image whose filename has been passed thought intent by its privious activity Interface.class
+     */
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit);
@@ -96,9 +102,19 @@ public class Edit extends AppCompatActivity {
         }
         edit_iv.setImageBitmap(bmp);
     }
+
+
+    /**
+     * This method is called when the edit-filter button is tapped by the user.
+     * It first gets the image from the imageview edit_iv in bitmap format and then compresses it (for speed gains) by scaling widht and height
+     * Then it saves the image bitmap into a FileOutputStream object which will later be retrieved in the activity this method starts.
+     * After that it creates an Intent object which carries height,width and name of the compressed bitmap.
+     * This intent is then used to start the filter_java activity expecting a result.(startActivityForResult)
+     * @return void
+     */
     private void editFilter(){
         Bitmap bmp = ((BitmapDrawable) edit_iv.getDrawable()).getBitmap();
-        
+
         try {
             String filename = "bitmap.png";
             FileOutputStream stream = this.openFileOutput(filename, Context.MODE_PRIVATE);
@@ -128,9 +144,18 @@ public class Edit extends AppCompatActivity {
             e.printStackTrace();
         }
     }
+
+    /**
+     * This method is called when the edit-hsv button is tapped by the user.
+     * It first gets the image from the imageview edit_iv in bitmap format and then compresses it (for speed gains) by scaling widht and height
+     * Then it saves the image bitmap into a FileOutputStream object which will later be retrieved in the activity this method starts.
+     * After that it creates an Intent object which carries height,width and name of the compressed bitmap.
+     * This intent is then used to start the hsv activity expecting a result.(startActivityForResult)
+     * @return void
+     */
     private void editHSV(){
         Bitmap bmp = ((BitmapDrawable) edit_iv.getDrawable()).getBitmap();
-        
+
         try {
             String filename = "bitmap.png";
             FileOutputStream stream = this.openFileOutput(filename, Context.MODE_PRIVATE);
@@ -160,9 +185,18 @@ public class Edit extends AppCompatActivity {
             e.printStackTrace();
         }
     }
+
+    /**
+     * This method is called when the edit-contbrit button is tapped by the user.
+     * It first gets the image from the imageview edit_iv in bitmap format and then compresses it (for speed gains) by scaling widht and height
+     * Then it saves the image bitmap into a FileOutputStream object which will later be retrieved in the activity this method starts.
+     * After that it creates an Intent object which carries height,width and name of the compressed bitmap.
+     * This intent is then used to start the Brightness activity expecting a result.(startActivityForResult)
+     * @return void
+     */
     private void editContbrit(){
         Bitmap bmp = ((BitmapDrawable) edit_iv.getDrawable()).getBitmap();
-        
+
         try {
             String filename = "bitmap.png";
             FileOutputStream stream = this.openFileOutput(filename, Context.MODE_PRIVATE);
@@ -192,10 +226,18 @@ public class Edit extends AppCompatActivity {
             e.printStackTrace();
         }
     }
-    
+
+    /**
+     * This method is called when the edit-rotate button is tapped by the user.
+     * It first gets the image from the imageview edit_iv in bitmap format and then compresses it (for speed gains) by scaling widht and height
+     * Then it saves the image bitmap into a FileOutputStream object which will later be retrieved in the activity this method starts.
+     * After that it creates an Intent object which carries height,width and name of the compressed bitmap.
+     * This intent is then used to start the Rotate activity expecting a result.(startActivityForResult)
+     * @return void
+     */
     private void editRotate(){
         Bitmap bmp = ((BitmapDrawable) edit_iv.getDrawable()).getBitmap();
-        
+
         try {
             String filename = "bitmap.png";
             FileOutputStream stream = this.openFileOutput(filename, Context.MODE_PRIVATE);
@@ -259,10 +301,20 @@ public class Edit extends AppCompatActivity {
         }
     }
     
-    
+
+
+    /**
+     * This function is called when the user taps on done button(@id/edit_done)
+     * The bitmap is first compressed for speed gains by scaling width and height.
+     * Then the compressed form of the image bitmap is saved into a FileOutputStream Object which will later be retrieved in the paernt activity
+     * Then it creates a new intent object carrying information about height,width and name of the saved image
+     * This intent is passed back to the parent activity of this activity using setResult function.
+     * Basically when this method is called the current activity is stopped and we go back to its parent activity
+     * @return void
+     */
     private void editDone(){
         Bitmap bmp = ((BitmapDrawable) edit_iv.getDrawable()).getBitmap();
-        
+
         try {
             String filename = "bitmap.png";
             FileOutputStream stream = this.openFileOutput(filename, Context.MODE_PRIVATE);
@@ -293,7 +345,16 @@ public class Edit extends AppCompatActivity {
             e.printStackTrace();
         }
     }
-    
+
+    /**
+     * This method recieves the result intent from its subsequent activites.
+     * If the resultCode passed by the subsequent activity is RESULT_OK, this method loads the image saved into FileOutputStream object into a bitmap
+     * The bitmap is then converted to a Mat object which is scaled back to it's original size and then converted back to bitmap.
+     * The converted bitmap is then set to to edit_iv imageView.
+     * @param requestCode
+     * @param resultCode
+     * @param data
+     */
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK) {
@@ -319,4 +380,3 @@ public class Edit extends AppCompatActivity {
         }
     }
 }
-

@@ -25,7 +25,7 @@ import java.io.FileOutputStream;
 public class Edit extends AppCompatActivity {
     private int EDIT_FILTER = 0, EDIT_CONTBRIT = 1, EDIT_HSV = 2, EDIT_ROTATE = 3;
     private ImageView edit_iv;
-    private Button edit_filter, edit_contbrit, edit_hsv, edit_done, edit_rotate;
+    private Button edit_filter, edit_contbrit, edit_hsv, edit_done, edit_rotate, edit_resize;
     private Bitmap bmp;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +37,13 @@ public class Edit extends AppCompatActivity {
         edit_done = (Button) findViewById(R.id.edit_done);
         edit_contbrit = (Button) findViewById(R.id.edit_contbrit);
         edit_rotate = (Button) findViewById(R.id.edit_rotate);
+        edit_resize = (Button) findViewById(R.id.edit_resize);
+        edit_resize.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                editResize();
+            }
+        });
         edit_rotate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -218,6 +225,40 @@ public class Edit extends AppCompatActivity {
             e.printStackTrace();
         }
     }
+    
+    private void editResize(){
+        Bitmap bmp = ((BitmapDrawable) edit_iv.getDrawable()).getBitmap();
+        
+        try {
+            String filename = "bitmap.png";
+            FileOutputStream stream = this.openFileOutput(filename, Context.MODE_PRIVATE);
+            int height = bmp.getHeight();
+            int width = bmp.getWidth();
+            double scale = 1;
+            if(bmp.getAllocationByteCount()>1250000){
+                scale = Math.sqrt(bmp.getAllocationByteCount()/1250000);
+            }
+            Mat inputImage = new Mat(height, width, CvType.CV_8UC4);
+            Utils.bitmapToMat(bmp,inputImage);
+            Size sz = new Size((int) (width/scale),(int) (height/scale));
+            Mat fin = new Mat((int) (height/scale),(int) (width/scale),CvType.CV_8UC4);
+            Imgproc.resize(inputImage,fin,sz);
+            Bitmap tosend = Bitmap.createBitmap((int) (width/scale),(int) (height/scale), Bitmap.Config.ARGB_8888);
+            Utils.matToBitmap(fin,tosend);
+            tosend.compress(Bitmap.CompressFormat.PNG, 0, stream);
+            stream.close();
+            Intent intent = new Intent(this, Resize.class);
+            Bundle b = new Bundle();
+            b.putInt("height", height);
+            b.putInt("width",width);
+            b.putString("image", filename);
+            intent.putExtras(b);
+            startActivityForResult(intent, EDIT_ROTATE);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
     
     private void editDone(){
         Bitmap bmp = ((BitmapDrawable) edit_iv.getDrawable()).getBitmap();

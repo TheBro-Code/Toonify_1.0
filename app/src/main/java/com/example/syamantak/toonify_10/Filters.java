@@ -135,6 +135,13 @@ public class Filters extends AppCompatActivity {
         addInvert(layout);
     }
 
+    /**
+     * creates a new Image vies sets it to a smaller cartoonified version image of
+     * the current image. Also when the user clicks on this ImageView, the app starts
+     * performing a background process of cartoonify using AsyncTask class.
+     * @param layout - the layout on which the created ImageView will be added
+     * @return void
+     */
     private void addCartoonify(LinearLayout layout){
         ImageView imageView = new ImageView(this);
         imageView.setPadding(4, 4, 4, 4);
@@ -158,7 +165,17 @@ public class Filters extends AppCompatActivity {
         layout.addView(imageView);
     }
 
+    /**
+     * This class allows you to perform background operations and publish
+     * results on the UI thread without having to manipulate threads and/or handlers.
+     */
     private class AsyncTaskCartoonify extends AsyncTask<Void, Void, Bitmap> {
+
+        /**
+         * This method calls the doCartoonify process in the background.
+         * @param args
+         * @return returns a bitmap of the cartoonified image
+         */
 
         @Override
         protected Bitmap doInBackground(Void... args) {
@@ -166,6 +183,12 @@ public class Filters extends AppCompatActivity {
             return help;
         }
 
+        /**
+         * This method set the visibility of the progress bar to invisible on post Execution
+         * of AsynTask
+         * @param result - the bitmap of cartoonified version of the current image
+         * @return void
+         */
         @Override
         protected void onPostExecute(Bitmap result) {
             progressBar.setVisibility(View.INVISIBLE);
@@ -173,6 +196,10 @@ public class Filters extends AppCompatActivity {
             filter_iv.setImageBitmap(result);
         }
 
+        /**
+         * This method sets the visibilty of progress bar to visible on preExecutiion of AsyncTask
+         * @return void
+         */
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -665,7 +692,21 @@ public class Filters extends AppCompatActivity {
 
     //Implemention of Filters
 
+    /**
+     * This method is used to Cartonify the Image whose bitmap is given to it.
+     * First the bitmap is copied to another bitmap
+     * then a number of Mat objects are declared which will be used to hold images Mat during intermediate steps
+     * Then the input bitmap is converted to Mat object and stores in InputImage
+     * After which InputImage is resized if it's size is larger than a specified threshold for speed improvement for larger images.
+     * The input image is then grayscaled and adaptive threshold is applied on it to create an image with just the edges present which is stored in edgeImage
+     * Again on the InputImage repetitive bilateral filter is applied to smoothen out the image which is stored in dstMat
+     * Finally both of them are merged by performing bitwise_and which gives us the final cartoonified image which is FinalImage
+     * This FinalImage is converted to bitmap which is then returned
+     * @param src - the bitmap of the image to be cartoonified
+     * @return the bitmap of the cartoonifies Image
+     */
     private Bitmap doCartoonify(Bitmap src){
+        //Creating the copy of the original bitmap so that the original one is not changed
         Bitmap bitmap = src.copy(Bitmap.Config.ARGB_8888,true);
         int height = bitmap.getHeight();
         int width = bitmap.getWidth();
@@ -970,6 +1011,16 @@ public class Filters extends AppCompatActivity {
         Utils.matToBitmap(help3,bitmap);
         return bitmap;
     }
+
+    /**
+     * Applies the Emboss filter on the bitmap of the image
+     * Initially the original bitmap is copied into a bitmap then converted into Mat ImageInput
+     * Also a convolution matrix by the name ConvMat is create which is filled with specified values to apply the emboss filter
+     * Then the filter2D function matrix is used to apply the filter using the created convMat on InputMat mat with bias and anchor set as default.
+     * The filtered image is saves to Output_Image Mat object and then converted to bitmap which is then returned
+     * @param src - the bitmap of the image on which the emboss effect is to be implemented
+     * @return returs the bitmap of embossed image
+     */
     public Bitmap emboss(Bitmap src)
     {
         Bitmap bitmap = src.copy(Bitmap.Config.ARGB_8888,true);
@@ -1003,6 +1054,16 @@ public class Filters extends AppCompatActivity {
         return bmp32;
     }
 
+    /**
+     * Applies the Emboss filter on the bitmap of the image
+     * Initially the original bitmap is copied into a bitmap
+     * Then the bitmap is converted to grayscale using doGrayscale method after which it is converted into Mat ImageInput
+     * Also a convolution matrix by the name ConvMat is create which is filled with specified values so as to apply the emboss filter
+     * Then the filter2D function is used to apply the filter using the created convMat on InputMat mat with bias and anchor set as default.
+     * The filtered image is saves to Output_Image Mat object and then converted to bitmap which is then returned
+     * @param src - the bitmap of the image on which the emboss effect is to be implemented
+     * @return returs the bitmap of embossed image
+     */
     public Bitmap gray_emboss(Bitmap src)
     {
         Bitmap bitmap1 = src.copy(Bitmap.Config.ARGB_8888,true);
@@ -1154,7 +1215,18 @@ public class Filters extends AppCompatActivity {
         }
     }
 
-
+    /**
+     * Applies the Vignette effect on the bitmap of the input image.
+     * The source bitmap is first copied into another bitmap.
+     * a gradient is created that draws a radial gradient given the center and radius with center colour transparent and edge coloured black.
+     * Then a canvas object is created with the originalBitmap to draw into and filled with R,G,B values of 0 and A(opacity) value of 1
+     * Then a paint object is created with shader set to gradient and antialiasing turned on and colour black.
+     * Then a rect object of size same as input bitmap is created after which a rectf object is created using rect.
+     * Then the specified rect is drawn into canvas using the specified paint object created earlier.
+     * This canvas is then drawn into the original Bitmap which is then returned.
+     * @param src the bitmap of the image on which the filter has to applied
+     * @return returns the bitmap of the image after applying the Vignette filter
+     */
     public Bitmap applyVignette(Bitmap src) {
         Bitmap originalBitmap = src.copy(Bitmap.Config.ARGB_8888,true);
 
